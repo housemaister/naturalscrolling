@@ -17,7 +17,7 @@ class NaturalscrollingIndicator:
     
     def __init__(self):
         self.AboutDialog = AboutNaturalscrollingDialog
-        self.mouseids = self.get_slave_pointer()
+        self.mouseids = self.get_slave_pointers()
         self.pingfrequency = 1 # in seconds
         
         self.ind = appindicator.Indicator(
@@ -34,11 +34,11 @@ class NaturalscrollingIndicator:
         self.menu_setup()
         self.ind.set_menu(self.menu)
 
-    def get_slave_pointer(self):
+    def get_slave_pointers(self):
         xinput_reader = SwissKnife.XinputReader()
         xinput = SwissKnife.Xinput()
 
-        return xinput_reader.get_slave_pointer(xinput.list())[0]
+        return xinput_reader.get_slave_pointer(xinput.list())
 
     def menu_setup(self):
         self.menu = gtk.Menu()
@@ -96,22 +96,23 @@ class NaturalscrollingIndicator:
         """
         Global method to apply or not Natural Scrolling
         """
-        map = os.popen('xinput get-button-map %s' % self.mouseids).read().strip()
-        
-        if enabled == True:
-            map = map.replace('4 5', '5 4')
-            map = map.replace('6 7', '7 6')
-            self.settings.key(GCONF_NATURAL_SCROLLING_KEY).enable()
-            self.ind.set_status(appindicator.STATUS_ATTENTION)
-        else:
-            map = map.replace('5 4', '4 5')
-            map = map.replace('7 6', '6 7')
-            self.settings.key(GCONF_NATURAL_SCROLLING_KEY).disable()
-            self.ind.set_status(appindicator.STATUS_ACTIVE)
-        
-        self.menu_item_natural_scrolling.set_active(enabled)
-        
-        os.system('xinput set-button-map %s %s' %(self.mouseids, map))
+        for mouseid in self.mouseids:
+            buttonmap = os.popen('xinput get-button-map %s' % mouseid).read().strip()
+            
+            if enabled == True:
+                buttonmap = buttonmap.replace('4 5', '5 4')
+                buttonmap = buttonmap.replace('6 7', '7 6')
+                self.settings.key(GCONF_NATURAL_SCROLLING_KEY).enable()
+                self.ind.set_status(appindicator.STATUS_ATTENTION)
+            else:
+                buttonmap = buttonmap.replace('5 4', '4 5')
+                buttonmap = buttonmap.replace('7 6', '6 7')
+                self.settings.key(GCONF_NATURAL_SCROLLING_KEY).disable()
+                self.ind.set_status(appindicator.STATUS_ACTIVE)
+            
+            self.menu_item_natural_scrolling.set_active(enabled)
+            
+            os.system('xinput set-button-map %s %s' %(mouseid, buttonmap))
 
     def on_natural_scrolling_toggled(self, widget, data=None):
         """
